@@ -4,8 +4,7 @@ import Auth from '../utils/auth';
 import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 import { SAVE_BOOK } from '../utils/mutations';
-import { useQuery, useMutation } from '@apollo/react-hooks';
-import { GET_ME } from '../utils/queries';
+import { useMutation } from '@apollo/react-hooks';
 
 const SearchBooks = () => {
   const [searchedBooks, setSearchedBooks] = useState([]);
@@ -58,25 +57,15 @@ const SearchBooks = () => {
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
-    console.log('book to save after searched', bookToSave)
     
     const token = Auth.loggedIn() ? Auth.getToken() : null;
     if (!token) {
       return false;
     }
 
-    const { loading, data } = useQuery(GET_ME);
-    const userData = data?.me || {};
-
-    console.log("Before saving userData......................: ", userData);
-    if (loading) {
-      console.log("Loading");
-    }
-
-
     try {
-      await saveTheBook({
-        variables: { _id: userData.data.id, savedbooks: bookToSave }
+      const { data } = await saveTheBook({
+        variables: { savedbooks: bookToSave }
       });
 
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
