@@ -5,13 +5,11 @@ const { signToken } = require('../utils/auth');
 const resolvers = {
     Query: {
         me: async (parent, args, context) => {
-          console.log("Get my saved books........................")
-            if (context.user._id) {
+            if (context.user) {
                 const userData = await User.findOne({})
                     .select('-__v -password')
-                    .populate('savedBooks')
+                    .populate('books')
 
-                    console.log("Return userdata............................ ", userData)
                 return userData;
             }
             throw new AuthenticationError('Not logged in');
@@ -25,7 +23,6 @@ const resolvers = {
             return { token, user };
         },
         login: async (parent, { email, password }) => {
-          console.log('we hit the login!!!', email, password)
             const user = await User.findOne({ email });
 
             if (!user) {
@@ -43,24 +40,27 @@ const resolvers = {
         },
         saveBook: async (parent, args, context) => {
             if (context.user) {
-          
+              console.log("SAVE...........: ", args);
               const updatedUser = await User.findByIdAndUpdate(
                 { _id: context.user._id },
-                { $addToSet: { savedBooks: args.savedbooks } },
+                { $addToSet: { savedBooks: args.input } },
                 { new: true }
               );
-          
+
+              console.log("SAVE II...........: ", updatedUser);
+
               return updatedUser;
             }
           
             throw new AuthenticationError('You need to be logged in!');
           },
-        removeBook: async (parent, { bookId }, context) => {
+        removeBook: async (parent, args, context) => {
           if (context.user) {
             const updatedUser = await User.findOneAndUpdate(
               { _id: context.user._id },
-              { $pull: { savedBooks: context.user.bookId } },
+              { $pull: { savedBooks: {bookId: args.bookId } } },
               { new: true }
+            );
         
             return updatedUser;
           }
